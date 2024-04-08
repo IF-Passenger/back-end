@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String      @id @default(uuid())
+  registrationNumber Int         @unique
+  name               String?
+  email              String?     @unique
+  image              String?
+  cars               Car[]
+  course             Course?     @relation(fields: [courseId], references: [id])
+  courseId           String?
+  city               City?       @relation(fields: [cityId], references: [id])
+  cityId             Int?
+  drivenTrips        Trip[]      @relation("driver")
+  secondaryTrips     Trip[]      @relation("secondaryDriver")
+  passengerAt        Passenger[]
+  finishedRegister   Boolean     @default(false)
+  description        String?
+}
+
+model Car {
+  id           String @id @default(uuid())
+  brand        String
+  model        String
+  passengers   Int
+  owner        User   @relation(fields: [ownerId], references: [id])
+  ownerId      String
+  licensePlate String
+}
+
+model City {
+  id        Int    @id
+  name      String
+  users     User[]
+  TripsFrom Trip[] @relation("tripFrom")
+  TripsTo   Trip[] @relation("tripTo")
+}
+
+model Course {
+  id    String @id @default(uuid())
+  name  String
+  users User[]
+}
+
+model Trip {
+  id                String      @id @default(uuid())
+  driver            User        @relation("driver", fields: [driverId], references: [id])
+  driverId          String
+  passengers        Passenger[]
+  secondaryDriver   User?       @relation("secondaryDriver", fields: [secondaryDriverId], references: [id])
+  secondaryDriverId String?
+  from              City        @relation("tripFrom", fields: [fromId], references: [id])
+  fromId            Int
+  to                City        @relation("tripTo", fields: [toId], references: [id])
+  toId              Int
+  maxPassengers     Int
+  price             Float
+  when              DateTime
+  notes             String?
+  createdAt         DateTime    @default(now())
+  deletedAt         DateTime?
+}
+
+model Passenger {
+  id     String @id @default(uuid())
+  userId String
+  tripId String
+  User   User   @relation(fields: [userId], references: [id])
+  Trip   Trip   @relation(fields: [tripId], references: [id])
+}
